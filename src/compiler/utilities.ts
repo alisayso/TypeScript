@@ -1502,12 +1502,14 @@ namespace ts {
             const jsDocComments = getJSDocComments(parameter.parent, /*checkParentVariableStatement*/ true);
             if (jsDocComments) {
                 for (const jsDocComment of jsDocComments) {
-                    for (const tag of jsDocComment.tags) {
-                        if (tag.kind === SyntaxKind.JSDocParameterTag) {
-                            const parameterTag = <JSDocParameterTag>tag;
-                            const name = parameterTag.preParameterName || parameterTag.postParameterName;
-                            if (name.text === parameterName) {
-                                return parameterTag;
+                    if (jsDocComment.tags) {
+                        for (const tag of jsDocComment.tags) {
+                            if (tag.kind === SyntaxKind.JSDocParameterTag) {
+                                const parameterTag = <JSDocParameterTag>tag;
+                                const name = parameterTag.preParameterName || parameterTag.postParameterName;
+                                if (name.text === parameterName) {
+                                    return parameterTag;
+                                }
                             }
                         }
                     }
