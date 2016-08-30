@@ -6727,6 +6727,7 @@ namespace ts {
 
                         if (token() === SyntaxKind.CommaToken) {
                             nextJSDocToken();
+                            skipWhitespace();
                         }
                         else {
                             break;
