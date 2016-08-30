@@ -1356,9 +1356,11 @@ namespace ts {
         }
 
         for (const jsDocComment of jsDocComments) {
-            for (const tag of jsDocComment.tags) {
-                if (tag.kind === kind) {
-                    return tag;
+            if (jsDocComment.tags) {
+                for (const tag of jsDocComment.tags) {
+                    if (tag.kind === kind) {
+                        return tag;
+                    }
                 }
             }
         }
