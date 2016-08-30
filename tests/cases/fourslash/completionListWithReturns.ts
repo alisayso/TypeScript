@@ -1,6 +1,6 @@
 ///<reference path="fourslash.ts" />
-//// @allowJs: true
-//// @filename: returnstagFourslash.js
+// @allowJs: true
+// @Filename: returnstagFourslash.js
 /////**
 //// * Find an item
 //// * @returns {string|Array<string>}  The names of the found item(s).
@@ -34,5 +34,5 @@
 goTo.marker('2');
 verify.currentSignatureHelpIs('find(targetName: any): string | string[]')
 goTo.marker('1');
-verify.quickInfoIs('Find an item!!');
+verify.quickInfoIs('function find(targetName: any): string | string[]', 'Find an item');
 // TODO: Verify doc text as well
