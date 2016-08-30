@@ -525,10 +525,9 @@ namespace FourSlash {
             }
         }
 
+        //neater
         public verifyGoToDefinitionIs(endMarker: string) {
-            this.verifyDefinitionsCount(/*negative*/ false, 1); //neater
-            this.goToDefinition(0); //TODO: custom index
-            this.verifyCaretAtMarker(endMarker);
+            this.verifyGoToDefinitionsWorker([endMarker]);
         }
 
         public verifyGoToDefinition(startMarkers: string | string[], endMarker: string) {
@@ -538,17 +537,16 @@ namespace FourSlash {
                 }
             }
             else {
-                //TODO: do like in verifyGoToDefinitions
-                this.goToMarker(startMarkers);
-                this.verifyDefinitionsCount(/*negative*/ false, 1); //neater
-                this.goToDefinition(0); //TODO: custom index
-                this.verifyCaretAtMarker(endMarker);
+                this.verifyGoToDefinitions(startMarkers, [endMarker]);
             }
         }
 
         public verifyGoToDefinitions(startMarker: string, endMarkers: string[]) {
-            //neater
             this.goToMarker(startMarker);
+            this.verifyGoToDefinitionsWorker(endMarkers);
+        }
+
+        private verifyGoToDefinitionsWorker(endMarkers: string[]) {
             const definitions = this.languageService.getDefinitionAtPosition(this.activeFile.fileName, this.currentCaretPosition);
 
             //duplicate code
@@ -567,34 +565,6 @@ namespace FourSlash {
                 }
             }
         }
-
-        /*
-        // Entry points from fourslash.ts
-        public goToMarker(name = "") {
-            const marker = this.getMarkerByName(name);
-            if (this.activeFile.fileName !== marker.fileName) {
-                this.openFile(marker.fileName);
-            }
-
-            const content = this.getFileContent(marker.fileName);
-            if (marker.position === -1 || marker.position > content.length) {
-                throw new Error(`Marker "${name}" has been invalidated by unrecoverable edits to the file.`);
-            }
-            this.lastKnownMarker = name;
-            this.goToPosition(marker.position);
-        }
-        */
-
-        /*
-                    const definitions = this.languageService.getDefinitionAtPosition(this.activeFile.fileName, this.currentCaretPosition);
-            if (!definitions || !definitions.length) {
-                this.raiseError("goToDefinition failed - expected to at least one definition location but got 0");
-            }
-
-            if (definitionIndex >= definitions.length) {
-                this.raiseError(`goToDefinition failed - definitionIndex value (${definitionIndex}) exceeds definition list size (${definitions.length})`);
-            }
-            */
 
         public verifyGetEmitOutputForCurrentFile(expected: string): void {
             const emit = this.languageService.getEmitOutput(this.activeFile.fileName);
@@ -1674,15 +1644,6 @@ namespace FourSlash {
             else if (!foundDefinitions && !negative) {
                 this.raiseError("goToDefinition - expected to at least one definition location but got 0");
             }
-        }
-
-        public verifyDefinitionsCount(negative: boolean, expectedCount: number) {
-            const assertFn = negative ? assert.notEqual : assert.equal;
-
-            const definitions = this.languageService.getDefinitionAtPosition(this.activeFile.fileName, this.currentCaretPosition);
-            const actualCount = definitions && definitions.length || 0;
-
-            assertFn(actualCount, expectedCount, this.messageAtLastKnownMarker("Definitions Count"));
         }
 
         public verifyTypeDefinitionsCount(negative: boolean, expectedCount: number) {
@@ -2956,10 +2917,6 @@ namespace FourSlashInterface {
 
         public quickInfoExists() {
             this.state.verifyQuickInfoExists(this.negative);
-        }
-
-        public definitionCountIs(expectedCount: number) {
-            this.state.verifyDefinitionsCount(this.negative, expectedCount);
         }
 
         public typeDefinitionCountIs(expectedCount: number) {

@@ -132,7 +132,6 @@ declare namespace FourSlashInterface {
         errorExistsBeforeMarker(markerName?: string): void;
         quickInfoIs(expectedText?: string, expectedDocumentation?: string): void;
         quickInfoExists(): void;
-        definitionCountIs(expectedCount: number): void;
         typeDefinitionCountIs(expectedCount: number): void;
         definitionLocationExists(): void;
         verifyDefinitionsName(name: string, containerName: string): void;
