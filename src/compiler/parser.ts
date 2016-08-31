@@ -6390,19 +6390,22 @@ namespace ts {
                                     pushComment(text);
                                 }
                                 else {
+                                    // if the whitespace crosses the margin, take only the whitespace that passes the margin
                                     if (margin !== undefined && indent + text.length > margin) {
                                         comments.push(text.slice(margin - indent - 1));
                                     }
                                     indent += text.length;
                                 }
                                 break;
-                            default:
-                                if (token() === SyntaxKind.AsteriskToken && !seenAsterisk) {
+                            case SyntaxKind.AsteriskToken:
+                                if (!seenAsterisk) {
                                     // leading asterisks start recording on the *next* (non-whitespace) token
                                     savingComments = false;
                                     indent += text.length;
                                 }
-                                else {
+                                // FALLTHROUGH to gather comments
+                            default:
+                                if (seenAsterisk) {
                                     savingComments = true; // leading identifiers start recording as well
                                     pushComment(text);
                                 }
