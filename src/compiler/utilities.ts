@@ -282,8 +282,8 @@ namespace ts {
             return skipTrivia((sourceFile || getSourceFileOfNode(node)).text, node.pos, /*stopAfterLineBreak*/ false, /*stopAtComments*/ true);
         }
 
-        if (includeJsDocComment && node.jsDocComments && node.jsDocComments.length > 0) {
-            return getTokenPosOfNode(node.jsDocComments[0]);
+        if (includeJsDocComment && node.jsDoc && node.jsDoc.length > 0) {
+            return getTokenPosOfNode(node.jsDoc[0]);
         }
 
         // For a syntax list, it is possible that one of its children has JSDocComment nodes, while
@@ -1350,18 +1350,14 @@ namespace ts {
             return undefined;
         }
 
-        const jsDocComments = getJSDocComments(node, checkParentVariableStatement);
-        if (!jsDocComments) {
+        const jsDocTags = getJSDocTags(node, checkParentVariableStatement);
+        if (!jsDocTags) {
             return undefined;
         }
 
-        for (const jsDocComment of jsDocComments) {
-            if (jsDocComment.tags) {
-                for (const tag of jsDocComment.tags) {
-                    if (tag.kind === kind) {
-                        return tag;
-                    }
-                }
+        for (const tag of jsDocTags) {
+            if (tag.kind === kind) {
+                return tag;
             }
         }
     }
@@ -1378,10 +1374,26 @@ namespace ts {
         return previous;
     }
 
-    export function getJSDocComments(node: Node, checkParentVariableStatement: boolean): JSDocComment[] {
+    export function getJSDocComments(node: Node, checkParentVariableStatement: boolean): string[] {
+        return getJSDocs(node, checkParentVariableStatement, docs => map(docs, doc => doc.comment), tags => map(tags, tag => tag.comment));
+    }
+
+    function getJSDocTags(node: Node, checkParentVariableStatement: boolean): JSDocTag[] {
+        return getJSDocs(node, checkParentVariableStatement, docs => {
+            let result: JSDocTag[] = [];
+            for (const doc of docs) {
+                if (doc.tags) {
+                    result.push(...doc.tags);
+                }
+            }
+            return result;
+        }, tags => tags);
+    }
+
+   function getJSDocs<T>(node: Node, checkParentVariableStatement: boolean, getDocs: (docs: JSDoc[]) => T[], getTags: (tags: JSDocTag[]) => T[]): T[] {
         // TODO: Get rid of getJsDocComments and friends (note the lowercase 's' in Js)
         // TODO: A lot of this work should be cached, maybe. I guess it's only used in services right now...
-        let result: JSDocComment[] = undefined;
+        let result: T[] = undefined;
         // prepend documentation from parent sources
         if (checkParentVariableStatement) {
             // Try to recognize this pattern when node is initializer of variable declaration and JSDoc comments are on containing variable statement.
@@ -1402,11 +1414,11 @@ namespace ts {
                 isVariableOfVariableDeclarationStatement ? node.parent.parent :
                 undefined;
             if (variableStatementNode) {
-                result = append(result, getJSDocComments(variableStatementNode, checkParentVariableStatement));
+                result = append(result, getJSDocs(variableStatementNode, checkParentVariableStatement, getDocs, getTags));
             }
             if (node.kind === SyntaxKind.ModuleDeclaration &&
                 node.parent && node.parent.kind === SyntaxKind.ModuleDeclaration) {
-                result = append(result, getJSDocComments(node.parent, checkParentVariableStatement));
+                result = append(result, getJSDocs(node.parent, checkParentVariableStatement, getDocs, getTags));
             }
 
             // Also recognize when the node is the RHS of an assignment expression
@@ -1417,33 +1429,33 @@ namespace ts {
                 (parent as BinaryExpression).operatorToken.kind === SyntaxKind.EqualsToken &&
                 parent.parent.kind === SyntaxKind.ExpressionStatement;
             if (isSourceOfAssignmentExpressionStatement) {
-                result = append(result, getJSDocComments(parent.parent, checkParentVariableStatement));
+                result = append(result, getJSDocs(parent.parent, checkParentVariableStatement, getDocs, getTags));
             }
 
             const isPropertyAssignmentExpression = parent && parent.kind === SyntaxKind.PropertyAssignment;
             if (isPropertyAssignmentExpression) {
-                result = append(result, getJSDocComments(parent, checkParentVariableStatement));
+                result = append(result, getJSDocs(parent, checkParentVariableStatement, getDocs, getTags));
             }
 
             // Pull parameter comments from declaring function as well
             if (node.kind === SyntaxKind.Parameter) {
                 const paramTags = getJSDocParameterTag(node as ParameterDeclaration, checkParentVariableStatement);
                 if (paramTags) {
-                    result = append(result, paramTags);
+                    result = append(result, getTags(paramTags));
                 }
             }
         }
 
         if (isVariableLike(node) && node.initializer) {
-            result = append(result, getJSDocComments(node.initializer, /*checkParentVariableStatement*/ false));
+            result = append(result, getJSDocs(node.initializer, /*checkParentVariableStatement*/ false, getDocs, getTags));
         }
 
-        if (node.jsDocComments) {
+        if (node.jsDoc) {
             if (result) {
-                result = append(result, node.jsDocComments);
+                result = append(result, getDocs(node.jsDoc));
             }
             else {
-                return node.jsDocComments;
+                return getDocs(node.jsDoc);
             }
         }
 
@@ -1452,18 +1464,18 @@ namespace ts {
 
     function getJSDocParameterTag(param: ParameterDeclaration, checkParentVariableStatement: boolean): JSDocTag[] {
         const func = param.parent as FunctionLikeDeclaration;
-        const comments = getJSDocComments(func, checkParentVariableStatement);
+        const tags = getJSDocTags(func, checkParentVariableStatement);
         if (!param.name) {
             // this is an anonymous jsdoc param from a `function(type1, type2): type3` specification
             const i = func.parameters.indexOf(param);
-            const paramTags = findMatchingParameterTags(comments, tag => tag.kind === SyntaxKind.JSDocParameterTag);
+            const paramTags = filter(tags, tag => tag.kind === SyntaxKind.JSDocParameterTag);
             if (paramTags && 0 <= i && i < paramTags.length) {
                 return [paramTags[i]];
             }
         }
         else if (param.name.kind === SyntaxKind.Identifier) {
             const name = (param.name as Identifier).text;
-            const paramTags = findMatchingParameterTags(comments, tag => tag.kind === SyntaxKind.JSDocParameterTag && (tag as JSDocParameterTag).parameterName.text === name);
+            const paramTags = filter(tags, tag => tag.kind === SyntaxKind.JSDocParameterTag && (tag as JSDocParameterTag).parameterName.text === name);
             if (paramTags) {
                 return paramTags;
             }
@@ -1473,10 +1485,6 @@ namespace ts {
             // But multi-line object types aren't supported yet either
             return undefined;
         }
-    }
-
-    function findMatchingParameterTags(comments: JSDocComment[], pred: (tag: JSDocTag) => boolean): JSDocTag[] {
-        return concatMap(comments, c => filter(c.tags, pred));
     }
 
     export function getJSDocTypeTag(node: Node): JSDocTypeTag {
@@ -1492,26 +1500,20 @@ namespace ts {
     }
 
     export function getCorrespondingJSDocParameterTag(parameter: ParameterDeclaration): JSDocParameterTag {
-        // TODO: Replace calls of this with calls to getJSDocComments -- most of them fail with inline comments
-        // because they assume the jsdoc is a param tag on the parent function
         if (parameter.name && parameter.name.kind === SyntaxKind.Identifier) {
             // If it's a parameter, see if the parent has a jsdoc comment with an @param
             // annotation.
             const parameterName = (<Identifier>parameter.name).text;
 
-            const jsDocComments = getJSDocComments(parameter.parent, /*checkParentVariableStatement*/ true);
-            if (jsDocComments) {
-                for (const jsDocComment of jsDocComments) {
-                    if (jsDocComment.tags) {
-                        for (const tag of jsDocComment.tags) {
-                            if (tag.kind === SyntaxKind.JSDocParameterTag) {
-                                const parameterTag = <JSDocParameterTag>tag;
-                                const name = parameterTag.preParameterName || parameterTag.postParameterName;
-                                if (name.text === parameterName) {
-                                    return parameterTag;
-                                }
-                            }
-                        }
+            const jsDocTags = getJSDocTags(parameter.parent, /*checkParentVariableStatement*/ true);
+            if (!jsDocTags) {
+                return undefined;
+            }
+            for (const tag of jsDocTags) {
+                if (tag.kind === SyntaxKind.JSDocParameterTag) {
+                    const parameterTag = <JSDocParameterTag>tag;
+                    if (parameterTag.parameterName.text === parameterName) {
+                        return parameterTag;
                     }
                 }
             }

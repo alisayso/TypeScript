@@ -218,8 +218,8 @@ namespace ts.NavigationBar {
                 break;
 
             default:
-                if (node.jsDocComments) {
-                    for (const jsDocComment of node.jsDocComments) {
+                if (node.jsDoc) {
+                    for (const jsDocComment of node.jsDoc) {
                         for (const tag of jsDocComment.tags) {
                             if (tag.kind === SyntaxKind.JSDocTypedefTag) {
                                 addLeafNode(tag);

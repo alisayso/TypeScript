@@ -194,7 +194,7 @@ namespace ts {
         public end: number;
         public flags: NodeFlags;
         public parent: Node;
-        public jsDocComments: JSDocComment[];
+        public jsDocComments: JSDoc[];
         private _children: Node[];
 
         constructor(kind: SyntaxKind, pos: number, end: number) {
@@ -355,7 +355,7 @@ namespace ts {
         public end: number;
         public flags: NodeFlags;
         public parent: Node;
-        public jsDocComments: JSDocComment[];
+        public jsDocComments: JSDoc[];
         public __tokenTag: any;
 
         constructor(pos: number, end: number) {
@@ -487,11 +487,11 @@ namespace ts {
                 return;
             }
             for (const comment of comments) {
-                if (comment.comment) {
+                if (comment) {
                     if (documentationComment.length) {
                         documentationComment.push(lineBreakPart());
                     }
-                    documentationComment.push(textPart(comment.comment));
+                    documentationComment.push(textPart(comment));
                 }
             }
         });
@@ -7197,9 +7197,9 @@ namespace ts {
                     // See if this is a doc comment.  If so, we'll classify certain portions of it
                     // specially.
                     const docCommentAndDiagnostics = parseIsolatedJSDocComment(sourceFile.text, start, width);
-                    if (docCommentAndDiagnostics && docCommentAndDiagnostics.jsDocComment) {
-                        docCommentAndDiagnostics.jsDocComment.parent = token;
-                        classifyJSDocComment(docCommentAndDiagnostics.jsDocComment);
+                    if (docCommentAndDiagnostics && docCommentAndDiagnostics.jsDoc) {
+                        docCommentAndDiagnostics.jsDoc.parent = token;
+                        classifyJSDocComment(docCommentAndDiagnostics.jsDoc);
                         return;
                     }
                 }
@@ -7212,7 +7212,7 @@ namespace ts {
                 pushClassification(start, width, ClassificationType.comment);
             }
 
-            function classifyJSDocComment(docComment: JSDocComment) {
+            function classifyJSDocComment(docComment: JSDoc) {
                 let pos = docComment.pos;
                 if (docComment.tags) {
                     for (const tag of docComment.tags) {
@@ -8091,8 +8091,8 @@ namespace ts {
                     break;
                 default:
                     forEachChild(node, walk);
-                    if (node.jsDocComments) {
-                        for (const jsDocComment of node.jsDocComments) {
+                    if (node.jsDoc) {
+                        for (const jsDocComment of node.jsDoc) {
                             forEachChild(jsDocComment, walk);
                         }
                     }

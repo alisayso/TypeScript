@@ -464,7 +464,7 @@ namespace ts {
         modifiers?: ModifiersArray;                     // Array of modifiers
         /* @internal */ id?: number;                    // Unique id (used to look up NodeLinks)
         parent?: Node;                                  // Parent node (initialized by binding
-        /* @internal */ jsDocComments?: JSDocComment[]; // JSDoc for the node, if it has any.  Only for .js files.
+        /* @internal */ jsDoc?: JSDoc[];        // JSDoc for the node, if it has any.  Only for .js files.
         /* @internal */ symbol?: Symbol;                // Symbol declared by node (initialized by binding)
         /* @internal */ locals?: SymbolTable;           // Locals associated with node (initialized by binding)
         /* @internal */ nextContainer?: Node;           // Next container in declaration order (initialized by binding)
@@ -1519,15 +1519,16 @@ namespace ts {
     }
 
     // @kind(SyntaxKind.JSDocComment)
-    export interface JSDocComment extends Node {
-        tags: NodeArray<JSDocTag>; // TODO: Rename to children
-        comment: string | undefined; // TODO: Probably shouldn't admit undefined (and maybe it should be comments: string[] | undefined)
+    export interface JSDoc extends Node {
+        tags: NodeArray<JSDocTag>;
+        comment: string | undefined;
     }
 
     // @kind(SyntaxKind.JSDocTag)
-    export interface JSDocTag extends JSDocComment {
-        atToken: Node; // TODO: Push fields to superclass, make optional and get rid of this class
-        tagName: Identifier; // -OR- reflatten hierarchy and create a union alias.
+    export interface JSDocTag extends Node {
+        atToken: Node;
+        tagName: Identifier;
+        comment: string | undefined;
     }
 
     // @kind(SyntaxKind.JSDocTemplateTag)

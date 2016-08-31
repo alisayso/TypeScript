@@ -1109,7 +1109,7 @@ namespace ts {
                     Debug.fail("Comment has at least one diagnostic: " + comment.diagnostics[0].messageText);
                 }
 
-                const result = toJsonString(comment.jsDocComment);
+                const result = toJsonString(comment.jsDoc);
 
                 const expectedString = typeof expected === "string"
                     ? expected
