@@ -6364,96 +6364,50 @@ namespace ts {
                     let done = false;
                     let margin: number | undefined;
                     let text: string;
+                    function pushComment(text: string) {
+                        if (!margin) {
+                            margin = indent;
+                        }
+                        comments.push(text);
+                        indent += text.length;
+                    }
                     while (!done && token() !== SyntaxKind.EndOfFileToken) {
-                        if (savingComments && seenAsterisk) {
-                            switch (token()) {
-                                case SyntaxKind.NewLineTrivia:
-                                    // put this newline in, just in case it ISN"T the last line
-                                    // (we'll chomp it off afterward)
+                        text = scanner.getTokenText();
+                        switch (token()) {
+                            case SyntaxKind.NewLineTrivia:
+                                if (seenAsterisk) {
                                     savingComments = false;
                                     seenAsterisk = false;
-                                    indent = 0;
-                                    comments.push(scanner.getTokenText());
-                                    break;
-                                case SyntaxKind.AtToken:
-                                    done = true;
-                                    break;
-                                default:
-                                    text = scanner.getTokenText();
                                     comments.push(text);
-                                    if (!margin) {
-                                        margin = indent;
-                                    }
-                                    indent += text.length;
-                                    break;
-                            }
-                        }
-                        else if (!savingComments && !seenAsterisk) {
-                            text = scanner.getTokenText();
-                            switch (token()) {
-                                case SyntaxKind.AsteriskToken:
-                                    savingComments = false; // ... I guess?
-                                    seenAsterisk = true; // almost ready to start recording
-                                    indent += text.length;
-                                    break;
-                                case SyntaxKind.NewLineTrivia: // ignore doubled newlines
-                                    indent = 0;
-                                    break;
-                                case SyntaxKind.WhitespaceTrivia: // ignore leading whitespace
+                                }
+                                indent = 0;
+                                break;
+                            case SyntaxKind.AtToken:
+                                done = true
+                                break;
+                            case SyntaxKind.WhitespaceTrivia:
+                                if (savingComments && seenAsterisk) {
+                                    pushComment(text);
+                                }
+                                else {
                                     if (margin !== undefined && indent + text.length > margin) {
                                         comments.push(text.slice(margin - indent - 1));
                                     }
                                     indent += text.length;
-                                    break;
-                                case SyntaxKind.AtToken:
-                                    // STOP
-                                    done = true;
-                                    break;
-                                default:
-                                    // somebody decided to start writing with no whitespace or anything!
-                                    savingComments = true;
-                                    seenAsterisk = true;
-                                    if (!margin) {
-                                        margin = indent;
-                                    }
-                                    comments.push(text);
-                                    indent += text.length;
-                                    break;
-                            }
-                        }
-                        else if (seenAsterisk && !savingComments) {
-                            text = scanner.getTokenText();
-                            switch (token()) {
-                                case SyntaxKind.NewLineTrivia: // record newlines if they have pretty punctuation (could be wrong)
+                                }
+                                break;
+                            default:
+                                if (token() === SyntaxKind.AsteriskToken && !seenAsterisk) {
+                                    // leading asterisks start recording on the *next* (non-whitespace) token
                                     savingComments = false;
-                                    seenAsterisk = false;
-                                    comments.push(text);
-                                    indent = 0;
-                                    break;
-                                case SyntaxKind.WhitespaceTrivia: // ignore leading whitespace
-                                    if (margin !== undefined && indent + text.length > margin) {
-                                        comments.push(text.slice(margin - indent - 1));
-                                    }
                                     indent += text.length;
-                                    break;
-                                case SyntaxKind.AtToken:
-                                    // STOP
-                                    done = true;
-                                    break;
-                                default:
-                                    savingComments = true; // start recording again for real
-                                    seenAsterisk = true;
-                                    comments.push(text);
-                                    if (!margin) {
-                                        margin = indent;
-                                    }
-                                    indent += text.length;
-                                    break;
-                            }
-
-                        }
-                        else if (!savingComments && seenAsterisk) {
-                            Debug.assert(false, "Shouldn't happen");
+                                }
+                                else {
+                                    savingComments = true; // leading identifiers start recording as well
+                                    pushComment(text);
+                                }
+                                seenAsterisk = true;
+                                break;
                         }
                         if (!done) {
                             nextJSDocToken();
