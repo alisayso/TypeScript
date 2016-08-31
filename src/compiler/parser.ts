@@ -397,7 +397,7 @@ namespace ts {
                 return visitNode(cbNode, (<JSDocRecordMember>node).name) ||
                     visitNode(cbNode, (<JSDocRecordMember>node).type);
             case SyntaxKind.JSDocComment:
-                return visitNodes(cbNodes, (<JSDocComment>node).tags);
+                return visitNodes(cbNodes, (<JSDoc>node).tags);
             case SyntaxKind.JSDocParameterTag:
                 return visitNode(cbNode, (<JSDocParameterTag>node).preParameterName) ||
                     visitNode(cbNode, (<JSDocParameterTag>node).typeExpression) ||
@@ -450,10 +450,10 @@ namespace ts {
     /* @internal */
     export function parseIsolatedJSDocComment(content: string, start?: number, length?: number) {
         const result = Parser.JSDocParser.parseIsolatedJSDocComment(content, start, length);
-        if (result && result.jsDocComment) {
+        if (result && result.jsDoc) {
             // because the jsDocComment was parsed out of the source file, it might
             // not be covered by the fixupParentReferences.
-            Parser.fixupParentReferences(result.jsDocComment);
+            Parser.fixupParentReferences(result.jsDoc);
         }
 
         return result;
@@ -655,15 +655,15 @@ namespace ts {
             const comments = getLeadingCommentRangesOfNode(node, sourceFile);
             if (comments) {
                 for (const comment of comments) {
-                    const jsDocComment = JSDocParser.parseJSDocComment(node, comment.pos, comment.end - comment.pos);
-                    if (!jsDocComment) {
+                    const jsDoc = JSDocParser.parseJSDocComment(node, comment.pos, comment.end - comment.pos);
+                    if (!jsDoc) {
                         continue;
                     }
 
                     if (!node.jsDocComments) {
                         node.jsDocComments = [];
                     }
-                    node.jsDocComments.push(jsDocComment);
+                    node.jsDocComments.push(jsDoc);
                 }
             }
 
@@ -6127,14 +6127,14 @@ namespace ts {
             export function parseIsolatedJSDocComment(content: string, start: number, length: number) {
                 initializeState("file.js", content, ScriptTarget.Latest, /*_syntaxCursor:*/ undefined, ScriptKind.JS);
                 sourceFile = <SourceFile>{ languageVariant: LanguageVariant.Standard, text: content };
-                const jsDocComment = parseJSDocCommentWorker(start, length);
+                const jsDoc = parseJSDocCommentWorker(start, length);
                 const diagnostics = parseDiagnostics;
                 clearState();
 
-                return jsDocComment ? { jsDocComment, diagnostics } : undefined;
+                return jsDoc ? { jsDoc, diagnostics } : undefined;
             }
 
-            export function parseJSDocComment(parent: Node, start: number, length: number): JSDocComment {
+            export function parseJSDocComment(parent: Node, start: number, length: number): JSDoc {
                 const saveToken = currentToken;
                 const saveParseDiagnosticsLength = parseDiagnostics.length;
                 const saveParseErrorBeforeNextFinishedNode = parseErrorBeforeNextFinishedNode;
@@ -6151,7 +6151,7 @@ namespace ts {
                 return comment;
             }
 
-            export function parseJSDocCommentWorker(start: number, length: number): JSDocComment {
+            export function parseJSDocCommentWorker(start: number, length: number): JSDoc {
                 const content = sourceText;
                 start = start || 0;
                 const end = length === undefined ? content.length : start + length;
@@ -6163,7 +6163,7 @@ namespace ts {
 
                 let tags: NodeArray<JSDocTag>;
                 const comments: string[] = [];
-                let result: JSDocComment;
+                let result: JSDoc;
 
                 // Check for /** (JSDoc opening part)
                 if (!isJsDocStart(content, start)) {
@@ -6297,8 +6297,8 @@ namespace ts {
                         content.charCodeAt(start + 3) !== CharacterCodes.asterisk;
                 }
 
-                function createJSDocComment(): JSDocComment {
-                    const result = <JSDocComment>createNode(SyntaxKind.JSDocComment, start);
+                function createJSDocComment(): JSDoc {
+                    const result = <JSDoc>createNode(SyntaxKind.JSDocComment, start);
                     result.tags = tags;
                     result.comment = comments.length ? comments.join("") : undefined;
                     return finishNode(result, end);
@@ -6383,7 +6383,7 @@ namespace ts {
                                 indent = 0;
                                 break;
                             case SyntaxKind.AtToken:
-                                done = true
+                                done = true;
                                 break;
                             case SyntaxKind.WhitespaceTrivia:
                                 if (savingComments && seenAsterisk) {
