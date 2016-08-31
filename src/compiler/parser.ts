@@ -6026,10 +6026,8 @@ namespace ts {
             }
 
             function parseJSDocRecordType(): JSDocRecordType {
-                // TODO: As we start to use the real type parser more, it will need to understand JSDoc syntax at some point.
                 const result = <JSDocRecordType>createNode(SyntaxKind.JSDocRecordType);
                 result.literal = parseTypeLiteral();
-                // nextToken();
                 return finishNode(result);
             }
 
@@ -6184,7 +6182,9 @@ namespace ts {
                     let text: string;
 
                     nextJSDocToken();
-                    skipSpaces();
+                    while (token() === SyntaxKind.WhitespaceTrivia) {
+                        nextJSDocToken();
+                    }
                     if (token() === SyntaxKind.NewLineTrivia) {
                         canParseTag = true;
                         seenAsterisk = false;
@@ -6270,10 +6270,6 @@ namespace ts {
                             advanceToken = true;
                         }
                     }
-                    // TODO:
-                    // 1. Get jsdoc comments from params
-                    //    a. 'function': () => any, but should really be : Function
-                    // 6. get *all* tests to pass
                     removeLeadingNewlines(comments);
                     removeTrailingNewlines(comments);
                     result = createJSDocComment();
@@ -6306,12 +6302,6 @@ namespace ts {
                     result.tags = tags;
                     result.comment = comments.length ? comments.join("") : undefined;
                     return finishNode(result, end);
-                }
-
-                function skipSpaces(): void {
-                    while (token() === SyntaxKind.WhitespaceTrivia) {
-                        nextJSDocToken();
-                    }
                 }
 
                 function skipWhitespace(): void {

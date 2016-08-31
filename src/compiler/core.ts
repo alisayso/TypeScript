@@ -113,25 +113,6 @@ namespace ts {
         return undefined;
     }
 
-    /**
-     * Iterates through 'array' by index and performs the callback on each element of array until the callback
-     * returns a truthy value, then returns that value.
-     * If no such value is found, the callback is applied to each element of array and undefined is returned.
-     */
-    export function forEachUnique<T, U>(array: T[], callback: (element: T, index: number) => U): U {
-        if (array) {
-            for (let i = 0, len = array.length; i < len; i++) {
-                if (indexOf(array, array[i]) === i) {
-                    const result = callback(array[i], i);
-                    if (result) {
-                        return result;
-                    }
-                }
-            }
-        }
-        return undefined;
-    }
-
     /** Works like Array.prototype.find, returning `undefined` if no element satisfying the predicate is found. */
     export function find<T>(array: T[], predicate: (element: T, index: number) => boolean): T | undefined {
         for (let i = 0, len = array.length; i < len; i++) {
