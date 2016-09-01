@@ -567,8 +567,8 @@ namespace ts {
         }
 
         if (node) {
-            if (node.jsDoc) {
-                for (const jsDocComment of node.jsDoc) {
+            if (node.jsDocComments) {
+                for (const jsDocComment of node.jsDocComments) {
                     if (jsDocComment.tags) {
                         for (const tag of jsDocComment.tags) {
                             if (tag.pos <= position && position <= tag.end) {

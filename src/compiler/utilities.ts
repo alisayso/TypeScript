@@ -282,8 +282,8 @@ namespace ts {
             return skipTrivia((sourceFile || getSourceFileOfNode(node)).text, node.pos, /*stopAfterLineBreak*/ false, /*stopAtComments*/ true);
         }
 
-        if (includeJsDocComment && node.jsDoc && node.jsDoc.length > 0) {
-            return getTokenPosOfNode(node.jsDoc[0]);
+        if (includeJsDocComment && node.jsDocComments && node.jsDocComments.length > 0) {
+            return getTokenPosOfNode(node.jsDocComments[0]);
         }
 
         // For a syntax list, it is possible that one of its children has JSDocComment nodes, while
@@ -1450,7 +1450,7 @@ namespace ts {
             result = append(result, getJSDocs(node.initializer, /*checkParentVariableStatement*/ false, getDocs, getTags));
         }
 
-        if (node.jsDoc) {
+        if (node.jsDocComments) {
             if (result) {
                 result = append(result, getDocs(node.jsDocComments));
             }

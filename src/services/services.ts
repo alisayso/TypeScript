@@ -8091,8 +8091,8 @@ namespace ts {
                     break;
                 default:
                     forEachChild(node, walk);
-                    if (node.jsDoc) {
-                        for (const jsDocComment of node.jsDoc) {
+                    if (node.jsDocComments) {
+                        for (const jsDocComment of node.jsDocComments) {
                             forEachChild(jsDocComment, walk);
                         }
                     }
