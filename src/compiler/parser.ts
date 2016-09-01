@@ -660,10 +660,10 @@ namespace ts {
                         continue;
                     }
 
-                    if (!node.jsDoc) {
-                        node.jsDoc = [];
+                    if (!node.jsDocComments) {
+                        node.jsDocComments = [];
                     }
-                    node.jsDoc.push(jsDoc);
+                    node.jsDocComments.push(jsDoc);
                 }
             }
 
@@ -690,8 +690,8 @@ namespace ts {
                     const saveParent = parent;
                     parent = n;
                     forEachChild(n, visitNode);
-                    if (n.jsDoc) {
-                        for (const jsDocComment of n.jsDoc) {
+                    if (n.jsDocComments) {
+                        for (const jsDocComment of n.jsDocComments) {
                             jsDocComment.parent = n;
                             parent = jsDocComment;
                             forEachChild(jsDocComment, visitNode);

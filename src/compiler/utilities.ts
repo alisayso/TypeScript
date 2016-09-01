@@ -1452,10 +1452,10 @@ namespace ts {
 
         if (node.jsDoc) {
             if (result) {
-                result = append(result, getDocs(node.jsDoc));
+                result = append(result, getDocs(node.jsDocComments));
             }
             else {
-                return getDocs(node.jsDoc);
+                return getDocs(node.jsDocComments);
             }
         }
 
